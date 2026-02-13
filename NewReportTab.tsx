@@ -1,0 +1,355 @@
+
+import React from 'react';
+import { Plus, Trash2, Send, RefreshCcw, Handshake, AlertTriangle, Plane, Lock } from 'lucide-react';
+
+interface NewReportTabProps {
+  themeClasses: any;
+  formDate: string;
+  setFormDate: (d: string) => void;
+  formShift: string;
+  setFormShift: (s: any) => void;
+  formLeader: string;
+  setFormLeader: (l: string) => void;
+  leaders: any[];
+  formHR: any;
+  setFormHR: (hr: any) => void;
+  formPendencias: string;
+  setFormPendencias: (p: string) => void;
+  formOcorrencias: string;
+  setFormOcorrencias: (o: string) => void;
+  formRentals: any[];
+  handleAddRental: () => void;
+  handleRemoveRental: (i: number) => void;
+  handleRentalChange: (i: number, f: string, v: string) => void;
+  formFlights: any[];
+  handleAddFlight: () => void;
+  handleRemoveFlight: (i: number) => void;
+  handleFlightChange: (i: number, f: string, v: string) => void;
+  airlines: string[];
+  formGseOut: any[];
+  handleAddGseOut: () => void;
+  handleRemoveGseOut: (i: number) => void;
+  handleGseOutChange: (i: number, f: string, v: string) => void;
+  formGseIn: any[];
+  handleAddGseIn: () => void;
+  handleRemoveGseIn: (i: number) => void;
+  handleGseInChange: (i: number, v: string) => void;
+  fleetDetails: any[];
+  isSubmitting: boolean;
+  handleSaveReport: () => void;
+  resetForm: () => void;
+  setActiveTab: (t: any) => void;
+}
+
+const EMPRESAS_LOCACAO = ['Gol', 'Pro air', 'Dnata', 'Aerosky'];
+const TIPOS_EQUIPAMENTO_LOCACAO = ['Loader', 'Rebocador', 'Trator', 'Gpu', 'Carreta', 'Lpu', 'Viatura', 'Qta'];
+
+const NewReportTab: React.FC<NewReportTabProps> = (props) => {
+  const { themeClasses } = props;
+
+  const isRentalsValid = props.formRentals.every(loc => {
+    if (loc.tipo === 'ALOCAR') return loc.equipamento && loc.inicio && loc.fim;
+    return loc.empresa && loc.equipamento && loc.inicio && loc.fim;
+  });
+
+  const isFlightsValid = props.formFlights.every(v => {
+    const hasCia = v.companhia && (v.companhia !== 'OUTROS' || (v.manual_name && v.manual_name.trim() !== ''));
+    return hasCia && v.pouso && v.reboque;
+  });
+
+  const canSubmit = props.formLeader && isRentalsValid && isFlightsValid;
+  const isDateLocked = props.formShift !== 'madrugada';
+
+  return (
+    <div className="h-full flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+       <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-5 pb-6">
+         
+         {/* CABEÇALHO */}
+         <div className={`${themeClasses.bgCard} border ${themeClasses.border} p-5 md:p-8 shadow-2xl space-y-6 rounded-sm`}>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-1.5 h-6 bg-blue-600"></div>
+              <h2 className="text-xl font-black italic uppercase tracking-tighter">Lançamento de <span className="text-blue-600">Turno</span></h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div className="space-y-1.5 relative">
+                <label className="text-[9px] font-black text-blue-500 uppercase italic flex items-center gap-2">
+                  Referência {isDateLocked && <Lock size={8} className="opacity-50" />}
+                </label>
+                <div className="relative">
+                  <input 
+                    type="date" 
+                    value={props.formDate} 
+                    onChange={e => props.setFormDate(e.target.value)} 
+                    disabled={isDateLocked}
+                    className={`${themeClasses.bgInput} border ${themeClasses.border} p-3.5 font-black text-xs w-full italic rounded-sm outline-none focus:border-blue-500 disabled:opacity-40 disabled:cursor-not-allowed`} 
+                  />
+                  {isDateLocked && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-20">
+                      <Lock size={14} />
+                    </div>
+                  )}
+                </div>
+                {isDateLocked && <p className="text-[7px] font-black text-slate-500 uppercase italic">Bloqueado p/ turnos diurnos</p>}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black text-blue-500 uppercase italic">Turno Vigente</label>
+                <select 
+                  value={props.formShift} 
+                  onChange={e => props.setFormShift(e.target.value as any)} 
+                  className={`${themeClasses.bgInput} border ${themeClasses.border} p-3.5 font-black text-xs w-full italic rounded-sm outline-none appearance-none`}
+                >
+                  <option value="manha">MANHÃ</option>
+                  <option value="tarde">TARDE</option>
+                  <option value="noite">NOITE</option>
+                  <option value="madrugada">MADRUGADA</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black text-blue-500 uppercase italic">Líder Responsável</label>
+                <select 
+                  value={props.formLeader} 
+                  onChange={e => props.setFormLeader(e.target.value)} 
+                  className={`${themeClasses.bgInput} border ${themeClasses.border} p-3.5 font-black text-xs w-full italic rounded-sm outline-none appearance-none ${!props.formLeader ? 'border-amber-500/50' : ''}`}
+                >
+                  <option value="">-- SELECIONE --</option>
+                  {props.leaders.map(l => <option key={l.id} value={l.nome}>{l.nome}</option>)}
+                </select>
+              </div>
+            </div>
+         </div>
+
+         {/* RH */}
+         <div className={`${themeClasses.bgCard} border ${themeClasses.border} p-5 shadow-xl rounded-sm`}>
+            <h4 className="text-[10px] font-black italic uppercase text-slate-500 mb-4 tracking-widest">Controle de Equipe</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[{k: 'falta', l: 'Falta'}, {k: 'atestado', l: 'Atestado'}, {k: 'compensacao', l: 'Compens.'}, {k: 'saida_antecipada', l: 'Saída Ant.'}].map(i => (
+                <button 
+                  key={i.k} 
+                  onClick={() => props.setFormHR({...props.formHR, [i.k]: !props.formHR[i.k]})} 
+                  className={`py-4 px-2 border transition-all rounded-sm flex items-center justify-center text-center ${props.formHR[i.k] ? 'bg-rose-500/20 border-rose-500 text-rose-500 shadow-lg' : `${themeClasses.bgInput} border-transparent opacity-50`}`}
+                >
+                  <span className="text-[9px] font-black uppercase italic leading-none">{i.l}</span>
+                </button>
+              ))}
+            </div>
+         </div>
+
+         {/* PENDENCIAS / OCORRENCIAS */}
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className={`${themeClasses.bgCard} border ${themeClasses.border} p-5 shadow-xl rounded-sm space-y-3`}>
+              <label className="text-[10px] font-black text-amber-500 uppercase italic flex items-center gap-2">
+                <AlertTriangle size={12}/> Pendências
+              </label>
+              <textarea 
+                value={props.formPendencias} 
+                onChange={e => props.setFormPendencias(e.target.value)} 
+                rows={2} 
+                placeholder="Ex: Equipamento X no box 2..."
+                className={`${themeClasses.bgInput} border ${themeClasses.border} p-4 font-bold text-xs rounded-sm w-full italic outline-none focus:border-amber-500`}
+              />
+            </div>
+            <div className={`${themeClasses.bgCard} border ${themeClasses.border} p-5 shadow-xl rounded-sm space-y-3`}>
+              <label className="text-[10px] font-black text-rose-500 uppercase italic flex items-center gap-2">
+                <AlertTriangle size={12}/> Ocorrências
+              </label>
+              <textarea 
+                value={props.formOcorrencias} 
+                onChange={e => props.setFormOcorrencias(e.target.value)} 
+                rows={2} 
+                placeholder="Ex: Atraso no voo 123..."
+                className={`${themeClasses.bgInput} border ${themeClasses.border} p-4 font-bold text-xs rounded-sm w-full italic outline-none focus:border-rose-500`}
+              />
+            </div>
+         </div>
+
+         {/* ATENDIMENTOS */}
+         <div className={`${themeClasses.bgCard} border ${themeClasses.border} p-5 shadow-2xl rounded-sm`}>
+            <div className="flex justify-between items-center mb-5">
+              <div className="flex items-center gap-3">
+                <Plane size={16} className="text-blue-600" />
+                <h4 className="text-[10px] font-black italic uppercase text-blue-600 tracking-widest">Log de Atendimentos</h4>
+              </div>
+              <button 
+                onClick={props.handleAddFlight} 
+                className="bg-blue-600 w-8 h-8 rounded-full text-white flex items-center justify-center shadow-lg active:scale-90 transition-transform"
+              >
+                <Plus size={18}/>
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              {props.formFlights.map((v, i) => (
+                <div key={i} className={`${themeClasses.bgInput} p-3 rounded-sm relative border border-white/5`}>
+                  <button onClick={() => props.handleRemoveFlight(i)} className="absolute -top-1.5 -right-1.5 bg-rose-600 p-1.5 rounded-full text-white shadow-xl z-10"><Trash2 size={10}/></button>
+                  <div className="grid grid-cols-12 gap-3 items-center">
+                    <div className="col-span-12 md:col-span-6">
+                      <select 
+                        value={v.companhia} 
+                        onChange={e => props.handleFlightChange(i, 'companhia', e.target.value)} 
+                        className="bg-transparent border-none p-1 font-black text-xs w-full outline-none focus:ring-0 italic appearance-none"
+                      >
+                        <option value="">CIA</option>
+                        {props.airlines.map(cia => <option key={cia} value={cia}>{cia}</option>)}
+                        <option value="OUTROS">OUTROS</option>
+                      </select>
+                      {v.companhia === 'OUTROS' && (
+                        <input 
+                          type="text" 
+                          placeholder="NOME CIA..." 
+                          value={v.manual_name || ''} 
+                          onChange={e => props.handleFlightChange(i, 'manual_name', e.target.value)} 
+                          className="mt-2 bg-slate-900/20 border-none p-2 font-black text-[10px] w-full italic rounded-sm" 
+                        />
+                      )}
+                    </div>
+                    <div className="col-span-6 md:col-span-3">
+                      <label className="text-[7px] font-black text-slate-500 uppercase block mb-1">Pouso</label>
+                      <input type="time" value={v.pouso} onChange={e => props.handleFlightChange(i, 'pouso', e.target.value)} className="bg-slate-900/20 p-2 rounded-sm border-none font-black text-xs text-blue-500 w-full" />
+                    </div>
+                    <div className="col-span-6 md:col-span-3">
+                      <label className="text-[7px] font-black text-slate-500 uppercase block mb-1">Reboque</label>
+                      <input type="time" value={v.reboque} onChange={e => props.handleFlightChange(i, 'reboque', e.target.value)} className="bg-slate-900/20 p-2 rounded-sm border-none font-black text-xs text-emerald-500 w-full" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {props.formFlights.length === 0 && <p className="text-center py-4 text-[9px] font-black uppercase italic opacity-20">Nenhum voo adicionado</p>}
+            </div>
+         </div>
+
+         {/* LOCAÇÕES */}
+         <div className={`${themeClasses.bgCard} border ${themeClasses.border} p-5 shadow-2xl rounded-sm`}>
+            <div className="flex justify-between items-center mb-5">
+              <div className="flex items-center gap-3">
+                <Handshake size={16} className="text-emerald-600" />
+                <h4 className="text-[10px] font-black italic uppercase text-emerald-600 tracking-widest">Alocações / Locações</h4>
+              </div>
+              <button 
+                onClick={props.handleAddRental} 
+                className="bg-emerald-600 w-8 h-8 rounded-full text-white flex items-center justify-center shadow-lg active:scale-90 transition-transform"
+              >
+                <Plus size={18}/>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {props.formRentals.map((loc, i) => (
+                <div key={i} className={`${themeClasses.bgInput} p-4 rounded-sm relative border border-white/5 space-y-4`}>
+                  <button onClick={() => props.handleRemoveRental(i)} className="absolute -top-1.5 -right-1.5 bg-rose-600 p-1.5 rounded-full text-white shadow-xl z-10"><Trash2 size={10}/></button>
+                  
+                  <div className="flex gap-1 bg-slate-900/40 p-1 rounded-sm">
+                    <button 
+                      onClick={() => props.handleRentalChange(i, 'tipo', 'ALOCAR')}
+                      className={`flex-1 py-1.5 text-[8px] font-black uppercase italic rounded-sm transition-all ${loc.tipo === 'ALOCAR' ? 'bg-blue-600 text-white' : 'text-slate-500'}`}
+                    >
+                      Interno
+                    </button>
+                    <button 
+                      onClick={() => props.handleRentalChange(i, 'tipo', 'LOCAR')}
+                      className={`flex-1 py-1.5 text-[8px] font-black uppercase italic rounded-sm transition-all ${loc.tipo === 'LOCAR' ? 'bg-amber-600 text-white' : 'text-slate-500'}`}
+                    >
+                      Externo
+                    </button>
+                  </div>
+
+                  {loc.tipo === 'ALOCAR' ? (
+                    <select 
+                      value={loc.equipamento} 
+                      onChange={e => props.handleRentalChange(i, 'equipamento', e.target.value)} 
+                      className="bg-slate-900/30 border border-white/10 p-2.5 font-black text-[10px] w-full italic rounded-sm outline-none text-white appearance-none"
+                    >
+                      <option value="">EQUIPAMENTO FROTA</option>
+                      {props.fleetDetails.map(e => <option key={e.id} value={e.prefixo}>{e.prefixo} - {e.nome}</option>)}
+                    </select>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                      <select value={loc.empresa || ''} onChange={e => props.handleRentalChange(i, 'empresa', e.target.value)} className="bg-slate-900/30 border border-white/10 p-2.5 font-black text-[10px] w-full italic rounded-sm outline-none text-white appearance-none">
+                        <option value="">FORNECEDOR</option>
+                        {EMPRESAS_LOCACAO.map(emp => <option key={emp} value={emp}>{emp}</option>)}
+                      </select>
+                      <select value={loc.equipamento} onChange={e => props.handleRentalChange(i, 'equipamento', e.target.value)} className="bg-slate-900/30 border border-white/10 p-2.5 font-black text-[10px] w-full italic rounded-sm outline-none text-white appearance-none">
+                        <option value="">TIPO</option>
+                        {TIPOS_EQUIPAMENTO_LOCACAO.map(eq => <option key={eq} value={eq}>{eq}</option>)}
+                      </select>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <input type="time" value={loc.inicio} onChange={e => props.handleRentalChange(i, 'inicio', e.target.value)} className="bg-slate-900/20 border border-white/5 p-2 font-black text-[10px] text-blue-500 w-full rounded-sm" />
+                    <input type="time" value={loc.fim} onChange={e => props.handleRentalChange(i, 'fim', e.target.value)} className="bg-slate-900/20 border border-white/5 p-2 font-black text-[10px] text-blue-500 w-full rounded-sm" />
+                  </div>
+                </div>
+              ))}
+              {props.formRentals.length === 0 && <p className="text-center py-4 text-[9px] font-black uppercase italic opacity-20">Nenhuma locação</p>}
+            </div>
+         </div>
+
+         {/* BAIXAS / RETORNOS */}
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className={`${themeClasses.bgCard} border ${themeClasses.border} p-5 shadow-xl rounded-sm space-y-4`}>
+               <div className="flex justify-between items-center">
+                  <h4 className="text-[10px] font-black italic uppercase text-rose-500 tracking-widest">Baixa Técnica</h4>
+                  <button onClick={props.handleAddGseOut} className="bg-rose-600 w-6 h-6 rounded-full text-white flex items-center justify-center shadow-lg"><Plus size={14}/></button>
+               </div>
+               <div className="space-y-2">
+                 {props.formGseOut.map((item, i) => (
+                   <div key={i} className={`${themeClasses.bgInput} p-3 rounded-sm relative border border-white/5`}>
+                     <button onClick={() => props.handleRemoveGseOut(i)} className="absolute -top-1 -right-1 bg-rose-700 p-1 rounded-full text-white shadow-xl"><Trash2 size={10}/></button>
+                     <select value={item.prefixo} onChange={e => props.handleGseOutChange(i, 'prefixo', e.target.value)} className="bg-transparent border-none p-1 font-black text-[10px] w-full focus:ring-0 italic appearance-none">
+                       <option value="">EQUIPAMENTO</option>
+                       {props.fleetDetails.filter(e => e.status === 'OPERACIONAL').map(e => <option key={e.id} value={e.prefixo}>{e.prefixo}</option>)}
+                     </select>
+                   </div>
+                 ))}
+               </div>
+            </div>
+            <div className={`${themeClasses.bgCard} border ${themeClasses.border} p-5 shadow-xl rounded-sm space-y-4`}>
+               <div className="flex justify-between items-center">
+                  <h4 className="text-[10px] font-black italic uppercase text-emerald-500 tracking-widest">Retorno GSE</h4>
+                  <button onClick={props.handleAddGseIn} className="bg-emerald-600 w-6 h-6 rounded-full text-white flex items-center justify-center shadow-lg"><Plus size={14}/></button>
+               </div>
+               <div className="space-y-2">
+                 {props.formGseIn.map((item, i) => (
+                   <div key={i} className={`${themeClasses.bgInput} p-3 rounded-sm relative border border-white/5`}>
+                     <button onClick={() => props.handleRemoveGseIn(i)} className="absolute -top-1 -right-1 bg-emerald-700 p-1 rounded-full text-white shadow-xl"><Trash2 size={10}/></button>
+                     <select value={item.prefixo} onChange={e => props.handleGseInChange(i, e.target.value)} className="bg-transparent border-none p-1 font-black text-[10px] w-full focus:ring-0 italic appearance-none">
+                       <option value="">EQUIPAMENTO</option>
+                       {props.fleetDetails.filter(e => e.status === 'MANUTENCAO').map(e => <option key={e.id} value={e.prefixo}>{e.prefixo}</option>)}
+                     </select>
+                   </div>
+                 ))}
+               </div>
+            </div>
+         </div>
+
+       </div>
+
+       {/* FOOTER FIXO */}
+       <div className={`flex-none pt-4 border-t ${themeClasses.border} flex flex-col gap-3 items-center bg-transparent backdrop-blur-md`}>
+          {!canSubmit && (
+            <div className="flex items-center gap-2 text-[8px] font-black text-amber-500 uppercase italic animate-pulse">
+               <AlertTriangle size={12} /> Preencha todos os campos obrigatórios
+            </div>
+          )}
+          <button 
+            disabled={props.isSubmitting || !canSubmit} 
+            onClick={props.handleSaveReport} 
+            className={`w-full py-4 text-[12px] font-black text-white rounded-sm uppercase italic flex items-center justify-center gap-4 transition-all shadow-2xl active:scale-95 disabled:opacity-30 ${canSubmit ? 'bg-blue-600 hover:bg-blue-500 shadow-blue-500/40' : 'bg-slate-700'}`}
+          >
+            {props.isSubmitting ? <RefreshCcw className="animate-spin" size={24}/> : <><Send size={24}/> FINALIZAR TURNO</>}
+          </button>
+       </div>
+
+       <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(37, 99, 235, 0.2); border-radius: 10px; }
+      `}</style>
+    </div>
+  );
+};
+
+export default NewReportTab;

@@ -1,0 +1,249 @@
+
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { 
+  Zap, Sun, Moon, RefreshCcw, Download, Send
+} from 'lucide-react';
+import { supabase } from './supabase';
+import { FleetStat } from './types';
+
+// Subcomponentes
+import NewReportTab from './NewReportTab';
+
+// --- CONFIG ---
+const WEBHOOK_URL = 'https://teca-admin-n8n.ly7t0m.easypanel.host/webhook/e4eb976b-e3b7-40e7-b069-56c3162c9f70';
+
+// --- HELPERS ---
+const getLocalDateString = () => {
+  const now = new Date();
+  return now.toLocaleDateString('en-CA'); 
+};
+
+const App: React.FC = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Lógica PWA Install
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
+
+  const [isDarkMode, setIsDarkMode] = useState(true);
+  
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Dados necessários para o formulário
+  const [leaders, setLeaders] = useState<any[]>([]);
+  const [airlines, setAirlines] = useState<string[]>([]);
+  const [fleetDetails, setFleetDetails] = useState<any[]>([]);
+
+  // Form State
+  const [formDate, setFormDate] = useState(getLocalDateString());
+  const [formShift, setFormShift] = useState<'manha' | 'tarde' | 'noite' | 'madrugada'>('manha');
+  const [formLeader, setFormLeader] = useState('');
+  const [formHR, setFormHR] = useState({ falta: false, atestado: false, compensacao: false, saida_antecipada: false });
+  const [formPendencias, setFormPendencias] = useState('');
+  const [formOcorrencias, setFormOcorrencias] = useState('');
+  const [formRentals, setFormRentals] = useState<{ tipo: 'ALOCAR' | 'LOCAR'; empresa?: string; equipamento: string; inicio: string; fim: string }[]>([]);
+  const [formGseOut, setFormGseOut] = useState<{ prefixo: string; motivo: string }[]>([]);
+  const [formGseIn, setFormGseIn] = useState<{ prefixo: string }[]>([]);
+  const [formFlights, setFormFlights] = useState<any[]>([]);
+
+  // Regra de data automática: se o turno não for madrugada, reseta para hoje
+  useEffect(() => {
+    if (formShift !== 'madrugada') {
+      const today = getLocalDateString();
+      if (formDate !== today) {
+        setFormDate(today);
+      }
+    }
+  }, [formShift, formDate]);
+
+  const resetForm = useCallback(() => {
+    setFormDate(getLocalDateString());
+    setFormShift('manha');
+    setFormLeader('');
+    setFormHR({ falta: false, atestado: false, compensacao: false, saida_antecipada: false });
+    setFormPendencias('');
+    setFormOcorrencias('');
+    setFormRentals([]);
+    setFormGseOut([]);
+    setFormGseIn([]);
+    setFormFlights([]);
+  }, []);
+
+  const fetchData = useCallback(async (isSilent = false) => {
+    try {
+      if (!isSilent) setLoading(true);
+      
+      const { data: equips } = await supabase.from('equipamentos').select('*').order('prefixo', { ascending: true });
+      if (equips) setFleetDetails(equips);
+
+      const { data: leadersData } = await supabase.from('lideres').select('*').order('nome', { ascending: true });
+      if (leadersData) setLeaders(leadersData);
+
+      const { data: airlinesData } = await supabase.from('companhias_aereas').select('nome').order('nome', { ascending: true });
+      if (airlinesData) setAirlines(airlinesData.map(a => a.nome));
+
+    } catch (err) { console.error(err); } finally { if (!isSilent) setLoading(false); }
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const handleSaveReport = async () => {
+    if (!formLeader) { alert("Selecione o Líder!"); return; }
+    setIsSubmitting(true);
+    try {
+      const reportPayload = {
+        data: formDate,
+        turno: formShift === 'manha' ? 'manhã' : formShift,
+        lider: formLeader,
+        teve_falta: formHR.falta,
+        teve_atestado: formHR.atestado,
+        teve_compensacao: formHR.compensacao,
+        teve_saida_antecipada: formHR.saida_antecipada,
+        descricao_pendencias: formPendencias || "Não",
+        descricao_ocorrencias: formOcorrencias || "Não",
+        locacoes: formRentals,
+        voos: formFlights.filter(v => v.companhia).map(v => ({
+          companhia: v.companhia === 'OUTROS' ? (v.manual_name || 'OUTROS') : v.companhia,
+          numero: v.numero || 'S/N', pouso: v.pouso, reboque: v.reboque
+        })),
+        gse_enviados: formGseOut,
+        gse_retornados: formGseIn,
+        tem_equipamento_enviado: formGseOut.length > 0,
+        tem_equipamento_retornado: formGseIn.length > 0
+      };
+
+      const { error } = await supabase.from('relatorios_consolidados').insert([reportPayload]);
+      if (error) throw error;
+
+      if (formGseOut.length > 0) await supabase.from('equipamentos').update({ status: 'MANUTENCAO' }).in('prefixo', formGseOut.map(i => i.prefixo));
+      if (formGseIn.length > 0) await supabase.from('equipamentos').update({ status: 'OPERACIONAL' }).in('prefixo', formGseIn.map(i => i.prefixo));
+
+      await fetch(WEBHOOK_URL, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reportPayload) 
+      }).catch(console.error);
+
+      alert("Relatório Enviado com Sucesso!"); 
+      resetForm(); 
+      fetchData();
+    } catch (err: any) { alert(err.message); } finally { setIsSubmitting(false); }
+  };
+
+  const themeClasses = {
+    bgMain: isDarkMode ? 'bg-[#0f172a]' : 'bg-[#f8fafc]',
+    bgCard: isDarkMode ? 'bg-[#1e293b]' : 'bg-white',
+    bgInput: isDarkMode ? 'bg-[#0f172a]' : 'bg-[#f1f5f9]',
+    border: isDarkMode ? 'border-white/10' : 'border-slate-200',
+    textMain: isDarkMode ? 'text-slate-100' : 'text-slate-900',
+    textMuted: isDarkMode ? 'text-slate-400' : 'text-slate-400',
+    textHeader: isDarkMode ? 'text-white' : 'text-slate-900',
+  };
+
+  return (
+    <div className={`h-screen ${themeClasses.bgMain} ${themeClasses.textMain} flex flex-col font-sans overflow-hidden transition-colors duration-300`}>
+      <header className={`flex-none ${isDarkMode ? 'bg-[#1e293b] border-white/10' : 'bg-white border-slate-200'} border-b px-6 py-4 flex items-center justify-between shadow-xl z-20`}>
+        <div className="flex items-center gap-4">
+          <div className="bg-blue-600 p-2 rounded shadow-lg shadow-blue-500/40"><Zap size={22} className="text-white" /></div>
+          <div className="flex flex-col">
+            <h1 className={`text-xl font-black italic uppercase leading-none ${themeClasses.textHeader}`}>Ramp<span className="text-blue-500">Controll</span></h1>
+            <span className="text-[7px] font-black text-emerald-500 uppercase tracking-widest mt-0.5 flex items-center gap-1">
+              <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span> PWA Ativo
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {deferredPrompt && (
+            <button 
+              onClick={handleInstallApp}
+              className="flex items-center gap-2 h-[42px] px-4 rounded-sm border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all animate-pulse"
+              title="Instalar Aplicativo"
+            >
+              <Download size={18} />
+              <span className="hidden md:inline text-[10px] font-black uppercase italic">Instalar App</span>
+            </button>
+          )}
+          <button onClick={() => setIsDarkMode(!isDarkMode)} className={`p-2.5 h-[42px] w-[42px] flex items-center justify-center rounded-sm border ${themeClasses.border} ${isDarkMode ? 'bg-[#334155]' : 'bg-slate-100'} text-slate-400 hover:text-blue-500 transition-all`}>
+            {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+          <button onClick={() => fetchData()} className={`p-2.5 h-[42px] w-[42px] flex items-center justify-center rounded-sm border ${themeClasses.border} ${isDarkMode ? 'bg-[#334155]' : 'bg-slate-100'} text-slate-400 hover:text-blue-500 transition-all`}>
+            <RefreshCcw size={16} className={loading ? 'animate-spin' : ''} />
+          </button>
+        </div>
+      </header>
+
+      <main className={`flex-1 overflow-hidden ${isMobile ? 'p-3' : 'p-6'} max-w-[1200px] mx-auto w-full`}>
+        {loading ? (
+          <div className="h-full flex flex-col items-center justify-center opacity-20">
+            <RefreshCcw size={48} className="animate-spin text-blue-500 mb-4" />
+            <p className="font-black uppercase italic tracking-widest">Sincronizando Dados...</p>
+          </div>
+        ) : (
+          <NewReportTab 
+            themeClasses={themeClasses} 
+            formDate={formDate} setFormDate={setFormDate}
+            formShift={formShift} setFormShift={setFormShift}
+            formLeader={formLeader} setFormLeader={setFormLeader} leaders={leaders}
+            formHR={formHR} setFormHR={setFormHR}
+            formPendencias={formPendencias} setFormPendencias={setFormPendencias}
+            formOcorrencias={formOcorrencias} setFormOcorrencias={setFormOcorrencias}
+            formRentals={formRentals} 
+            handleAddRental={() => setFormRentals([...formRentals, { tipo: 'ALOCAR', equipamento: '', inicio: '', fim: '' }])}
+            handleRemoveRental={i => setFormRentals(formRentals.filter((_, idx) => idx !== i))}
+            handleRentalChange={(i, f, v) => { const u = [...formRentals]; (u[i] as any)[f] = v; setFormRentals(u); }}
+            formFlights={formFlights} 
+            handleAddFlight={() => setFormFlights([...formFlights, { companhia: '', numero: 'S/N', pouso: '', reboque: '', manual_name: '' }])}
+            handleRemoveFlight={i => setFormFlights(formFlights.filter((_, idx) => idx !== i))}
+            handleFlightChange={(i, f, v) => { const u = [...formFlights]; u[i][f] = v; setFormFlights(u); }}
+            airlines={airlines}
+            formGseOut={formGseOut} 
+            handleAddGseOut={() => setFormGseOut([...formGseOut, { prefixo: '', motivo: '' }])}
+            handleRemoveGseOut={i => setFormGseOut(formGseOut.filter((_, idx) => idx !== i))}
+            handleGseOutChange={(i, f, v) => { const u = [...formGseOut]; u[i][f] = v; setFormGseOut(u); }}
+            formGseIn={formGseIn} 
+            handleAddGseIn={() => setFormGseIn([...formGseIn, { prefixo: '' }])}
+            handleRemoveGseIn={i => setFormGseIn(formGseIn.filter((_, idx) => idx !== i))}
+            handleGseInChange={(i, v) => { const u = [...formGseIn]; u[i].prefixo = v; setFormGseIn(u); }}
+            fleetDetails={fleetDetails} 
+            isSubmitting={isSubmitting} 
+            handleSaveReport={handleSaveReport}
+            resetForm={resetForm} 
+            setActiveTab={() => {}} // No more tab switching
+          />
+        )}
+      </main>
+
+      <footer className={`flex-none ${isDarkMode ? 'bg-[#0f172a] border-white/10' : 'bg-white border-slate-200'} border-t px-6 py-2 flex justify-center items-center text-[8px] font-black uppercase ${themeClasses.textMuted} italic transition-colors duration-300`}>
+        <span>Ramp Controll Stable v16.0 - PWA Mode</span>
+      </footer>
+    </div>
+  );
+};
+
+export default App;
