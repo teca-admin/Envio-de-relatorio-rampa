@@ -44,7 +44,8 @@ const App: React.FC = () => {
     }
   };
 
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  // const [isDarkMode, setIsDarkMode] = useState(false);
+  const isDarkMode = false;
   
   useEffect(() => {
     const handleResize = () => {
@@ -189,9 +190,6 @@ const App: React.FC = () => {
               <span className="hidden md:inline text-[10px] font-black uppercase italic">Instalar App</span>
             </button>
           )}
-          <button onClick={() => setIsDarkMode(!isDarkMode)} className={`p-2.5 h-[42px] w-[42px] flex items-center justify-center rounded-sm border ${themeClasses.border} ${isDarkMode ? 'bg-[#334155]' : 'bg-slate-100'} text-slate-400 hover:text-blue-500 transition-all`}>
-            {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
           <button onClick={() => fetchData()} className={`p-2.5 h-[42px] w-[42px] flex items-center justify-center rounded-sm border ${themeClasses.border} ${isDarkMode ? 'bg-[#334155]' : 'bg-slate-100'} text-slate-400 hover:text-blue-500 transition-all`}>
             <RefreshCcw size={16} className={loading ? 'animate-spin' : ''} />
           </button>

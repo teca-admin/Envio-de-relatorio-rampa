@@ -167,18 +167,17 @@ const NewReportTab: React.FC<NewReportTabProps> = (props) => {
 
          {/* ATENDIMENTOS */}
          <div className={`${themeClasses.bgCard} border ${themeClasses.border} p-5 shadow-2xl rounded-sm`}>
-            <div className="flex justify-between items-center mb-5">
-              <div className="flex items-center gap-3">
-                <Plane size={16} className="text-blue-600" />
-                <h4 className="text-[10px] font-black italic uppercase text-blue-600 tracking-widest">Log de Atendimentos</h4>
-              </div>
-              <button 
-                onClick={props.handleAddFlight} 
-                className="bg-blue-600 w-8 h-8 rounded-full text-white flex items-center justify-center shadow-lg active:scale-90 transition-transform"
-              >
-                <Plus size={18}/>
-              </button>
-            </div>
+             <div className="flex items-center gap-3 mb-5">
+               <Plane size={16} className="text-blue-600" />
+               <h4 className="text-[10px] font-black italic uppercase text-blue-600 tracking-widest">5 - LOG DE ATENDIMENTOS</h4>
+             </div>
+             
+             <button 
+               onClick={props.handleAddFlight} 
+               className="w-full py-3 mb-5 bg-blue-600 hover:bg-blue-700 text-white rounded-sm font-black uppercase italic flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98]"
+             >
+               <Plus size={18} /> INSERIR CIA
+             </button>
             
             <div className="space-y-3">
               {props.formFlights.map((v, i) => (
@@ -222,18 +221,17 @@ const NewReportTab: React.FC<NewReportTabProps> = (props) => {
 
          {/* LOCAÇÕES */}
          <div className={`${themeClasses.bgCard} border ${themeClasses.border} p-5 shadow-2xl rounded-sm`}>
-            <div className="flex justify-between items-center mb-5">
-              <div className="flex items-center gap-3">
-                <Handshake size={16} className="text-emerald-600" />
-                <h4 className="text-[10px] font-black italic uppercase text-emerald-600 tracking-widest">Alocações / Locações</h4>
-              </div>
-              <button 
-                onClick={props.handleAddRental} 
-                className="bg-emerald-600 w-8 h-8 rounded-full text-white flex items-center justify-center shadow-lg active:scale-90 transition-transform"
-              >
-                <Plus size={18}/>
-              </button>
-            </div>
+             <div className="flex items-center gap-3 mb-5">
+               <Handshake size={16} className="text-emerald-600" />
+               <h4 className="text-[10px] font-black italic uppercase text-emerald-600 tracking-widest">4 - LOCAÇÕES / ALOCAÇÕES</h4>
+             </div>
+
+             <button 
+               onClick={props.handleAddRental} 
+               className="w-full py-3 mb-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm font-black uppercase italic flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98]"
+             >
+               <Plus size={18} /> NOVA LOCAÇÃO
+             </button>
 
             <div className="space-y-4">
               {props.formRentals.map((loc, i) => (
@@ -290,10 +288,14 @@ const NewReportTab: React.FC<NewReportTabProps> = (props) => {
          {/* BAIXAS / RETORNOS */}
          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className={`${themeClasses.bgCard} border ${themeClasses.border} p-5 shadow-xl rounded-sm space-y-4`}>
-               <div className="flex justify-between items-center">
-                  <h4 className="text-[10px] font-black italic uppercase text-rose-500 tracking-widest">Baixa Técnica</h4>
-                  <button onClick={props.handleAddGseOut} className="bg-rose-600 w-6 h-6 rounded-full text-white flex items-center justify-center shadow-lg"><Plus size={14}/></button>
-               </div>
+               <h4 className="text-[10px] font-black italic uppercase text-rose-500 tracking-widest mb-4">6 - BAIXA TÉCNICA (GSE)</h4>
+               
+               <button 
+                 onClick={props.handleAddGseOut} 
+                 className="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-sm font-black uppercase italic flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98]"
+               >
+                 <Plus size={18} /> NOVA BAIXA
+               </button>
                <div className="space-y-2">
                  {props.formGseOut.map((item, i) => (
                    <div key={i} className={`${themeClasses.bgInput} p-3 rounded-sm relative border border-white/5`}>
@@ -307,10 +309,14 @@ const NewReportTab: React.FC<NewReportTabProps> = (props) => {
                </div>
             </div>
             <div className={`${themeClasses.bgCard} border ${themeClasses.border} p-5 shadow-xl rounded-sm space-y-4`}>
-               <div className="flex justify-between items-center">
-                  <h4 className="text-[10px] font-black italic uppercase text-emerald-500 tracking-widest">Retorno GSE</h4>
-                  <button onClick={props.handleAddGseIn} className="bg-emerald-600 w-6 h-6 rounded-full text-white flex items-center justify-center shadow-lg"><Plus size={14}/></button>
-               </div>
+               <h4 className="text-[10px] font-black italic uppercase text-emerald-500 tracking-widest mb-4">7 - RETORNO DE GSE</h4>
+               
+               <button 
+                 onClick={props.handleAddGseIn} 
+                 className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm font-black uppercase italic flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98]"
+               >
+                 <Plus size={18} /> NOVO RETORNO
+               </button>
                <div className="space-y-2">
                  {props.formGseIn.map((item, i) => (
                    <div key={i} className={`${themeClasses.bgInput} p-3 rounded-sm relative border border-white/5`}>
