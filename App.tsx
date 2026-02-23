@@ -170,7 +170,14 @@ const App: React.FC = () => {
     <div className={`h-screen ${themeClasses.bgMain} ${themeClasses.textMain} flex flex-col font-sans overflow-hidden transition-colors duration-300`}>
       <header className={`flex-none ${isDarkMode ? 'bg-[#1e293b] border-white/10' : 'bg-white border-slate-200'} border-b px-6 py-4 flex items-center justify-between shadow-xl z-20`}>
         <div className="flex items-center gap-4">
-          <div className="bg-blue-600 p-2 rounded shadow-lg shadow-blue-500/40"><Zap size={22} className="text-white" /></div>
+          <div className="bg-white p-1 rounded shadow-lg overflow-hidden flex items-center justify-center w-[38px] h-[38px]">
+            <img 
+              src="https://drive.google.com/uc?export=view&id=1Cfxz5qZPqBEZWVTN4QPhuXfqzuNcvMwR" 
+              alt="Logo" 
+              className="w-full h-full object-contain"
+              referrerPolicy="no-referrer"
+            />
+          </div>
           <div className="flex flex-col">
             <h1 className={`text-xl font-black italic uppercase leading-none ${themeClasses.textHeader}`}>Ramp<span className="text-blue-500">Controll</span></h1>
             <span className="text-[7px] font-black text-emerald-500 uppercase tracking-widest mt-0.5 flex items-center gap-1">
