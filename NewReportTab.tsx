@@ -34,6 +34,10 @@ interface NewReportTabProps {
   handleAddGseIn: () => void;
   handleRemoveGseIn: (i: number) => void;
   handleGseInChange: (i: number, v: string) => void;
+  formTransporte: any[];
+  handleAddTransporte: () => void;
+  handleRemoveTransporte: (i: number) => void;
+  handleTransporteChange: (i: number, v: string) => void;
   fleetDetails: any[];
   isSubmitting: boolean;
   handleSaveReport: () => void;
@@ -57,7 +61,12 @@ const NewReportTab: React.FC<NewReportTabProps> = (props) => {
     return hasCia && v.pouso && v.reboque;
   });
 
-  const canSubmit = props.formLeader && isRentalsValid && isFlightsValid;
+  const isTransporteValid = props.formTransporte.every(t => t.cia);
+  const isGseOutValid = props.formGseOut.every(g => g.prefixo && g.motivo?.trim());
+  const isGseInValid = props.formGseIn.every(g => g.prefixo);
+  const isHRValid = !props.formHR.falta || (props.formHR.falta && props.formHR.detalhe_falta?.trim());
+
+  const canSubmit = props.formLeader && isRentalsValid && isFlightsValid && isTransporteValid && isGseOutValid && isGseInValid && isHRValid;
   const isDateLocked = props.formShift !== 'madrugada';
 
   return (
@@ -135,6 +144,19 @@ const NewReportTab: React.FC<NewReportTabProps> = (props) => {
                 </button>
               ))}
             </div>
+            
+            {props.formHR.falta && (
+              <div className="mt-4 space-y-1.5 animate-in slide-in-from-top-2 duration-300">
+                <label className="text-[9px] font-black text-rose-500 uppercase italic">Identificação de quem faltou</label>
+                <input 
+                  type="text" 
+                  value={props.formHR.detalhe_falta || ''} 
+                  onChange={e => props.setFormHR({...props.formHR, detalhe_falta: e.target.value})}
+                  placeholder="Nome do colaborador..."
+                  className={`${themeClasses.bgInput} border border-rose-500/30 p-3.5 font-black text-xs w-full italic rounded-sm outline-none focus:border-rose-500`}
+                />
+              </div>
+            )}
          </div>
 
          {/* PENDENCIAS / OCORRENCIAS */}
@@ -184,32 +206,36 @@ const NewReportTab: React.FC<NewReportTabProps> = (props) => {
                 <div key={i} className={`${themeClasses.bgInput} p-3 rounded-sm relative border border-white/5`}>
                   <button onClick={() => props.handleRemoveFlight(i)} className="absolute -top-1.5 -right-1.5 bg-rose-600 p-1.5 rounded-full text-white shadow-xl z-10"><Trash2 size={10}/></button>
                   <div className="grid grid-cols-12 gap-3 items-center">
-                    <div className="col-span-12 md:col-span-6">
-                      <select 
-                        value={v.companhia} 
-                        onChange={e => props.handleFlightChange(i, 'companhia', e.target.value)} 
-                        className="bg-transparent border-none p-1 font-black text-xs w-full outline-none focus:ring-0 italic appearance-none"
-                      >
-                        <option value="">CIA</option>
-                        {props.airlines.map(cia => <option key={cia} value={cia}>{cia}</option>)}
-                        <option value="OUTROS">OUTROS</option>
-                      </select>
-                      {v.companhia === 'OUTROS' && (
+                    <div className="col-span-12 md:col-span-6 flex gap-2">
+                      <div className="flex-1">
+                        <select 
+                          value={v.companhia} 
+                          onChange={e => props.handleFlightChange(i, 'companhia', e.target.value)} 
+                          className="bg-transparent border-none p-1 font-black text-xs w-full outline-none focus:ring-0 italic appearance-none"
+                        >
+                          <option value="">CIA</option>
+                          {props.airlines.map(cia => <option key={cia} value={cia}>{cia}</option>)}
+                          <option value="OUTROS">OUTROS</option>
+                        </select>
+                      </div>
+                    </div>
+                    {v.companhia === 'OUTROS' && (
+                      <div className="col-span-12">
                         <input 
                           type="text" 
                           placeholder="NOME CIA..." 
                           value={v.manual_name || ''} 
                           onChange={e => props.handleFlightChange(i, 'manual_name', e.target.value)} 
-                          className="mt-2 bg-slate-900/20 border-none p-2 font-black text-[10px] w-full italic rounded-sm" 
+                          className="bg-slate-900/20 border-none p-2 font-black text-[10px] w-full italic rounded-sm" 
                         />
-                      )}
-                    </div>
+                      </div>
+                    )}
                     <div className="col-span-6 md:col-span-3">
-                      <label className="text-[7px] font-black text-slate-500 uppercase block mb-1">Pouso</label>
+                      <label className="text-[7px] font-black text-slate-500 uppercase block mb-1">Início</label>
                       <input type="time" value={v.pouso} onChange={e => props.handleFlightChange(i, 'pouso', e.target.value)} className="bg-slate-900/20 p-2 rounded-sm border-none font-black text-xs text-blue-500 w-full" />
                     </div>
                     <div className="col-span-6 md:col-span-3">
-                      <label className="text-[7px] font-black text-slate-500 uppercase block mb-1">Reboque</label>
+                      <label className="text-[7px] font-black text-slate-500 uppercase block mb-1">Fim</label>
                       <input type="time" value={v.reboque} onChange={e => props.handleFlightChange(i, 'reboque', e.target.value)} className="bg-slate-900/20 p-2 rounded-sm border-none font-black text-xs text-emerald-500 w-full" />
                     </div>
                   </div>
@@ -285,6 +311,38 @@ const NewReportTab: React.FC<NewReportTabProps> = (props) => {
             </div>
          </div>
 
+         {/* TRANSPORTE TRIPULAÇÃO */}
+         <div className={`${themeClasses.bgCard} border ${themeClasses.border} p-5 shadow-2xl rounded-sm`}>
+             <div className="flex items-center gap-3 mb-5">
+               <Handshake size={16} className="text-blue-500" />
+               <h4 className="text-[10px] font-black italic uppercase text-blue-500 tracking-widest">8 - TRANSPORTE DE TRIPULANTE E IMIGRAÇÃO</h4>
+             </div>
+             
+             <button 
+               onClick={props.handleAddTransporte} 
+               className="w-full py-3 mb-5 bg-blue-500 hover:bg-blue-600 text-white rounded-sm font-black uppercase italic flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98]"
+             >
+               <Plus size={18} /> NOVO TRANSPORTE
+             </button>
+            
+            <div className="space-y-3">
+              {props.formTransporte.map((t, i) => (
+                <div key={i} className={`${themeClasses.bgInput} p-3 rounded-sm relative border border-white/5`}>
+                  <button onClick={() => props.handleRemoveTransporte(i)} className="absolute -top-1.5 -right-1.5 bg-rose-600 p-1.5 rounded-full text-white shadow-xl z-10"><Trash2 size={10}/></button>
+                  <select 
+                    value={t.cia} 
+                    onChange={e => props.handleTransporteChange(i, e.target.value)} 
+                    className="bg-transparent border-none p-1 font-black text-xs w-full outline-none focus:ring-0 italic appearance-none"
+                  >
+                    <option value="">SELECIONE A CIA</option>
+                    {props.airlines.map(cia => <option key={cia} value={cia}>{cia}</option>)}
+                  </select>
+                </div>
+              ))}
+              {props.formTransporte.length === 0 && <p className="text-center py-4 text-[9px] font-black uppercase italic opacity-20">Nenhum transporte registrado</p>}
+            </div>
+         </div>
+
          {/* BAIXAS / RETORNOS */}
          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className={`${themeClasses.bgCard} border ${themeClasses.border} p-5 shadow-xl rounded-sm space-y-4`}>
@@ -298,12 +356,19 @@ const NewReportTab: React.FC<NewReportTabProps> = (props) => {
                </button>
                <div className="space-y-2">
                  {props.formGseOut.map((item, i) => (
-                   <div key={i} className={`${themeClasses.bgInput} p-3 rounded-sm relative border border-white/5`}>
+                   <div key={i} className={`${themeClasses.bgInput} p-3 rounded-sm relative border border-white/5 space-y-2`}>
                      <button onClick={() => props.handleRemoveGseOut(i)} className="absolute -top-1 -right-1 bg-rose-700 p-1 rounded-full text-white shadow-xl"><Trash2 size={10}/></button>
                      <select value={item.prefixo} onChange={e => props.handleGseOutChange(i, 'prefixo', e.target.value)} className="bg-transparent border-none p-1 font-black text-[10px] w-full focus:ring-0 italic appearance-none">
                        <option value="">EQUIPAMENTO</option>
                        {props.fleetDetails.filter(e => e.status === 'OPERACIONAL').map(e => <option key={e.id} value={e.prefixo}>{e.prefixo}</option>)}
                      </select>
+                     <input 
+                       type="text" 
+                       placeholder="MOTIVO DA BAIXA..." 
+                       value={item.motivo || ''} 
+                       onChange={e => props.handleGseOutChange(i, 'motivo', e.target.value)} 
+                       className="bg-slate-900/20 border-none p-2 font-black text-[9px] w-full italic rounded-sm outline-none focus:ring-1 focus:ring-rose-500" 
+                     />
                    </div>
                  ))}
                </div>

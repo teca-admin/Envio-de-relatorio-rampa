@@ -60,10 +60,10 @@ const DashboardTab: React.FC<DashboardTabProps> = ({ report, themeClasses, isDar
                     <h3 className={`text-2xl md:text-4xl font-black italic uppercase tracking-tighter ${themeClasses.textHeader}`}>{voo.companhia}</h3>
                     <div className="flex items-center gap-4">
                        <div className="flex items-center gap-2 text-[10px] md:text-[11px] font-black text-blue-500 uppercase italic">
-                          <span>POUSO: <span className={`${isDarkMode ? 'text-white' : 'text-slate-900'} ml-1`}>{voo.pouso}</span></span>
+                          <span>INÍCIO: <span className={`${isDarkMode ? 'text-white' : 'text-slate-900'} ml-1`}>{voo.inicio || voo.pouso}</span></span>
                        </div>
                        <div className="flex items-center gap-2 text-[10px] md:text-[11px] font-black text-emerald-500 uppercase italic">
-                          <span>REBOQUE: <span className={`${isDarkMode ? 'text-white' : 'text-slate-900'} ml-1`}>{voo.reboque}</span></span>
+                          <span>FIM: <span className={`${isDarkMode ? 'text-white' : 'text-slate-900'} ml-1`}>{voo.fim || voo.reboque}</span></span>
                        </div>
                     </div>
                   </div>
@@ -76,7 +76,7 @@ const DashboardTab: React.FC<DashboardTabProps> = ({ report, themeClasses, isDar
                   <div className="flex items-center gap-3">
                     <Clock size={20} className="text-blue-500 md:hidden" />
                     <p className={`text-3xl md:text-5xl font-black italic tabular-nums group-hover:text-blue-500 transition-colors ${themeClasses.textHeader}`}>
-                      {calculateTurnaround(voo.pouso, voo.reboque)}
+                      {calculateTurnaround(voo.inicio || voo.pouso, voo.fim || voo.reboque)}
                     </p>
                   </div>
                 </div>
@@ -133,6 +133,22 @@ const DashboardTab: React.FC<DashboardTabProps> = ({ report, themeClasses, isDar
 
           <div className={`${themeClasses.bgCard} border ${themeClasses.border} p-6 rounded-sm shadow-2xl`}>
             <div className="flex justify-between items-center mb-6">
+              <h4 className="text-[15px] font-black uppercase italic text-blue-500 tracking-tighter">Transporte Tripulação</h4>
+              <Handshake size={22} className="text-blue-500 opacity-30" />
+            </div>
+            <div className="space-y-4">
+              {report.transporte_tripulacao?.length ? report.transporte_tripulacao.map((t: any, i: number) => (
+                <div key={i} className="p-4 border-l-4 border-blue-600 bg-blue-600/5 rounded-sm shadow-inner group hover:bg-blue-600/10 transition-all">
+                  <p className="text-[14px] font-black italic text-white uppercase leading-tight">{t.cia}</p>
+                </div>
+              )) : (
+                <p className="text-center py-6 opacity-20 italic uppercase text-[11px] font-black">Sem registros</p>
+              )}
+            </div>
+          </div>
+
+          <div className={`${themeClasses.bgCard} border ${themeClasses.border} p-6 rounded-sm shadow-2xl`}>
+            <div className="flex justify-between items-center mb-6">
               <h4 className="text-[15px] font-black uppercase italic text-slate-400 tracking-tighter">Status de Equipe</h4>
               <UserCheck size={22} className="text-slate-400 opacity-30" />
             </div>
@@ -143,11 +159,18 @@ const DashboardTab: React.FC<DashboardTabProps> = ({ report, themeClasses, isDar
                 { l: 'Compensação', v: report.teve_compensacao },
                 { l: 'Saída Antecipada', v: report.teve_saida_antecipada }
               ].map(q => (
-                <div key={q.l} className={`flex justify-between items-center px-5 py-4 rounded-sm transition-all ${q.v ? 'bg-rose-500/10 border-l-4 border-rose-500' : 'bg-slate-800/40 opacity-40'}`}>
-                   <span className="text-[11px] font-black uppercase italic text-slate-200">{q.l}</span>
-                   <span className={`text-[11px] font-black uppercase italic ${q.v ? 'text-rose-500' : 'text-slate-500'}`}>
-                      {q.v ? 'ALERTA' : 'OK'}
-                   </span>
+                <div key={q.l} className={`flex flex-col px-5 py-4 rounded-sm transition-all ${q.v ? 'bg-rose-500/10 border-l-4 border-rose-500' : 'bg-slate-800/40 opacity-40'}`}>
+                   <div className="flex justify-between items-center w-full">
+                      <span className="text-[11px] font-black uppercase italic text-slate-200">{q.l}</span>
+                      <span className={`text-[11px] font-black uppercase italic ${q.v ? 'text-rose-500' : 'text-slate-500'}`}>
+                         {q.v ? 'ALERTA' : 'OK'}
+                      </span>
+                   </div>
+                   {q.l === 'Faltas' && q.v && report.detalhe_falta && (
+                     <p className="text-[9px] font-bold italic text-rose-400 mt-2 uppercase">
+                       Colaborador: {report.detalhe_falta}
+                     </p>
+                   )}
                 </div>
               ))}
             </div>

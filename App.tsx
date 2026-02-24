@@ -64,13 +64,14 @@ const App: React.FC = () => {
   const [formDate, setFormDate] = useState(getLocalDateString());
   const [formShift, setFormShift] = useState<'manha' | 'tarde' | 'noite' | 'madrugada'>('manha');
   const [formLeader, setFormLeader] = useState('');
-  const [formHR, setFormHR] = useState({ falta: false, atestado: false, compensacao: false, saida_antecipada: false });
+  const [formHR, setFormHR] = useState({ falta: false, detalhe_falta: '', atestado: false, compensacao: false, saida_antecipada: false });
   const [formPendencias, setFormPendencias] = useState('');
   const [formOcorrencias, setFormOcorrencias] = useState('');
   const [formRentals, setFormRentals] = useState<{ tipo: 'ALOCAR' | 'LOCAR'; empresa?: string; equipamento: string; inicio: string; fim: string }[]>([]);
   const [formGseOut, setFormGseOut] = useState<{ prefixo: string; motivo: string }[]>([]);
   const [formGseIn, setFormGseIn] = useState<{ prefixo: string }[]>([]);
   const [formFlights, setFormFlights] = useState<any[]>([]);
+  const [formTransporte, setFormTransporte] = useState<{ cia: string }[]>([]);
 
   // Regra de data automática: se o turno não for madrugada, reseta para hoje
   useEffect(() => {
@@ -86,13 +87,14 @@ const App: React.FC = () => {
     setFormDate(getLocalDateString());
     setFormShift('manha');
     setFormLeader('');
-    setFormHR({ falta: false, atestado: false, compensacao: false, saida_antecipada: false });
+    setFormHR({ falta: false, detalhe_falta: '', atestado: false, compensacao: false, saida_antecipada: false });
     setFormPendencias('');
     setFormOcorrencias('');
     setFormRentals([]);
     setFormGseOut([]);
     setFormGseIn([]);
     setFormFlights([]);
+    setFormTransporte([]);
   }, []);
 
   const fetchData = useCallback(async (isSilent = false) => {
@@ -122,6 +124,7 @@ const App: React.FC = () => {
         turno: formShift === 'manha' ? 'manhã' : formShift,
         lider: formLeader,
         teve_falta: formHR.falta,
+        detalhe_falta: formHR.detalhe_falta,
         teve_atestado: formHR.atestado,
         teve_compensacao: formHR.compensacao,
         teve_saida_antecipada: formHR.saida_antecipada,
@@ -130,8 +133,9 @@ const App: React.FC = () => {
         locacoes: formRentals,
         voos: formFlights.filter(v => v.companhia).map(v => ({
           companhia: v.companhia === 'OUTROS' ? (v.manual_name || 'OUTROS') : v.companhia,
-          numero: v.numero || 'S/N', pouso: v.pouso, reboque: v.reboque
+          numero: v.numero || 'S/N', inicio: v.pouso, fim: v.reboque
         })),
+        transporte_tripulacao: formTransporte,
         gse_enviados: formGseOut,
         gse_retornados: formGseIn,
         tem_equipamento_enviado: formGseOut.length > 0,
@@ -234,6 +238,10 @@ const App: React.FC = () => {
             handleAddGseIn={() => setFormGseIn([...formGseIn, { prefixo: '' }])}
             handleRemoveGseIn={i => setFormGseIn(formGseIn.filter((_, idx) => idx !== i))}
             handleGseInChange={(i, v) => { const u = [...formGseIn]; u[i].prefixo = v; setFormGseIn(u); }}
+            formTransporte={formTransporte}
+            handleAddTransporte={() => setFormTransporte([...formTransporte, { cia: '' }])}
+            handleRemoveTransporte={i => setFormTransporte(formTransporte.filter((_, idx) => idx !== i))}
+            handleTransporteChange={(i, v) => { const u = [...formTransporte]; u[i].cia = v; setFormTransporte(u); }}
             fleetDetails={fleetDetails} 
             isSubmitting={isSubmitting} 
             handleSaveReport={handleSaveReport}
