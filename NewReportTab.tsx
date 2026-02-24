@@ -68,13 +68,13 @@ const NewReportTab: React.FC<NewReportTabProps> = (props) => {
          <div className={`${themeClasses.bgCard} border ${themeClasses.border} p-5 md:p-8 shadow-2xl space-y-6 rounded-sm`}>
             <div className="flex items-center gap-3 mb-2">
               <div className="w-1.5 h-6 bg-blue-600"></div>
-              <h2 className="text-xl font-black italic uppercase tracking-tighter">Lançamento de <span className="text-blue-600">Turno</span></h2>
+              <h2 className="text-xl font-black italic uppercase tracking-tighter">LANÇAMENTO DE <span className="text-blue-600">TURNO</span></h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <div className="space-y-1.5 relative">
                 <label className="text-[9px] font-black text-blue-500 uppercase italic flex items-center gap-2">
-                  Referência {isDateLocked && <Lock size={8} className="opacity-50" />}
+                  REFERÊNCIA {isDateLocked && <Lock size={8} className="opacity-50" />}
                 </label>
                 <div className="relative">
                   <input 
@@ -94,7 +94,7 @@ const NewReportTab: React.FC<NewReportTabProps> = (props) => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[9px] font-black text-blue-500 uppercase italic">Turno Vigente</label>
+                <label className="text-[9px] font-black text-blue-500 uppercase italic">TURNO VIGENTE</label>
                 <select 
                   value={props.formShift} 
                   onChange={e => props.setFormShift(e.target.value as any)} 
@@ -108,7 +108,7 @@ const NewReportTab: React.FC<NewReportTabProps> = (props) => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[9px] font-black text-blue-500 uppercase italic">Líder Responsável</label>
+                <label className="text-[9px] font-black text-blue-500 uppercase italic">LÍDER RESPONSÁVEL</label>
                 <select 
                   value={props.formLeader} 
                   onChange={e => props.setFormLeader(e.target.value)} 
@@ -140,9 +140,9 @@ const NewReportTab: React.FC<NewReportTabProps> = (props) => {
          {/* PENDENCIAS / OCORRENCIAS */}
          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className={`${themeClasses.bgCard} border ${themeClasses.border} p-5 shadow-xl rounded-sm space-y-3`}>
-              <label className="text-[10px] font-black text-amber-500 uppercase italic flex items-center gap-2">
-                <AlertTriangle size={12}/> Pendências
-              </label>
+                <label className="text-[10px] font-black text-amber-500 uppercase italic flex items-center gap-2">
+                  <AlertTriangle size={12}/> PENDÊNCIAS
+                </label>
               <textarea 
                 value={props.formPendencias} 
                 onChange={e => props.setFormPendencias(e.target.value)} 
@@ -152,9 +152,9 @@ const NewReportTab: React.FC<NewReportTabProps> = (props) => {
               />
             </div>
             <div className={`${themeClasses.bgCard} border ${themeClasses.border} p-5 shadow-xl rounded-sm space-y-3`}>
-              <label className="text-[10px] font-black text-rose-500 uppercase italic flex items-center gap-2">
-                <AlertTriangle size={12}/> Ocorrências
-              </label>
+                <label className="text-[10px] font-black text-rose-500 uppercase italic flex items-center gap-2">
+                  <AlertTriangle size={12}/> OCORRÊNCIAS
+                </label>
               <textarea 
                 value={props.formOcorrencias} 
                 onChange={e => props.setFormOcorrencias(e.target.value)} 

@@ -172,10 +172,9 @@ const App: React.FC = () => {
         <div className="flex items-center gap-4">
           <div className="bg-white p-1 rounded shadow-lg overflow-hidden flex items-center justify-center w-[38px] h-[38px]">
             <img 
-              src="https://drive.google.com/uc?export=view&id=1Cfxz5qZPqBEZWVTN4QPhuXfqzuNcvMwR" 
+              src="https://drive.google.com/thumbnail?id=1Cfxz5qZPqBEZWVTN4QPhuXfqzuNcvMwR&sz=w512" 
               alt="Logo" 
               className="w-full h-full object-contain"
-              referrerPolicy="no-referrer"
             />
           </div>
           <div className="flex flex-col">
@@ -245,7 +244,7 @@ const App: React.FC = () => {
       </main>
 
       <footer className={`flex-none ${isDarkMode ? 'bg-[#0f172a] border-white/10' : 'bg-white border-slate-200'} border-t px-6 py-2 flex justify-center items-center text-[8px] font-black uppercase ${themeClasses.textMuted} italic transition-colors duration-300`}>
-        <span>Ramp Controll Stable v16.0 - PWA Mode</span>
+        <span>RAMP CONTROLL STABLE V16.0 - PWA MODE</span>
       </footer>
     </div>
   );
