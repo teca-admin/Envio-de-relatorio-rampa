@@ -37,7 +37,7 @@ interface NewReportTabProps {
   formTransporte: any[];
   handleAddTransporte: () => void;
   handleRemoveTransporte: (i: number) => void;
-  handleTransporteChange: (i: number, v: string) => void;
+  handleTransporteChange: (i: number, f: string, v: string) => void;
   fleetDetails: any[];
   isSubmitting: boolean;
   handleSaveReport: () => void;
@@ -61,7 +61,10 @@ const NewReportTab: React.FC<NewReportTabProps> = (props) => {
     return hasCia && v.pouso && v.reboque;
   });
 
-  const isTransporteValid = props.formTransporte.every(t => t.cia);
+  const isTransporteValid = props.formTransporte.every(t => {
+    const hasCia = t.cia && (t.cia !== 'OUTROS' || (t.manual_name && t.manual_name.trim() !== ''));
+    return hasCia;
+  });
   const isGseOutValid = props.formGseOut.every(g => g.prefixo && g.motivo?.trim());
   const isGseInValid = props.formGseIn.every(g => g.prefixo);
   const isHRValid = !props.formHR.falta || (props.formHR.falta && props.formHR.detalhe_falta?.trim());
@@ -327,16 +330,26 @@ const NewReportTab: React.FC<NewReportTabProps> = (props) => {
             
             <div className="space-y-3">
               {props.formTransporte.map((t, i) => (
-                <div key={i} className={`${themeClasses.bgInput} p-3 rounded-sm relative border border-white/5`}>
+                <div key={i} className={`${themeClasses.bgInput} p-3 rounded-sm relative border border-white/5 space-y-2`}>
                   <button onClick={() => props.handleRemoveTransporte(i)} className="absolute -top-1.5 -right-1.5 bg-rose-600 p-1.5 rounded-full text-white shadow-xl z-10"><Trash2 size={10}/></button>
                   <select 
                     value={t.cia} 
-                    onChange={e => props.handleTransporteChange(i, e.target.value)} 
+                    onChange={e => props.handleTransporteChange(i, 'cia', e.target.value)} 
                     className="bg-transparent border-none p-1 font-black text-xs w-full outline-none focus:ring-0 italic appearance-none"
                   >
                     <option value="">SELECIONE A CIA</option>
                     {props.airlines.map(cia => <option key={cia} value={cia}>{cia}</option>)}
+                    <option value="OUTROS">OUTROS</option>
                   </select>
+                  {t.cia === 'OUTROS' && (
+                    <input 
+                      type="text" 
+                      placeholder="NOME DA CIA..." 
+                      value={t.manual_name || ''} 
+                      onChange={e => props.handleTransporteChange(i, 'manual_name', e.target.value)} 
+                      className="bg-slate-900/20 border-none p-2 font-black text-[10px] w-full italic rounded-sm outline-none focus:ring-1 focus:ring-blue-500" 
+                    />
+                  )}
                 </div>
               ))}
               {props.formTransporte.length === 0 && <p className="text-center py-4 text-[9px] font-black uppercase italic opacity-20">Nenhum transporte registrado</p>}

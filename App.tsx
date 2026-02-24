@@ -71,7 +71,7 @@ const App: React.FC = () => {
   const [formGseOut, setFormGseOut] = useState<{ prefixo: string; motivo: string }[]>([]);
   const [formGseIn, setFormGseIn] = useState<{ prefixo: string }[]>([]);
   const [formFlights, setFormFlights] = useState<any[]>([]);
-  const [formTransporte, setFormTransporte] = useState<{ cia: string }[]>([]);
+  const [formTransporte, setFormTransporte] = useState<{ cia: string; manual_name?: string }[]>([]);
 
   // Regra de data automática: se o turno não for madrugada, reseta para hoje
   useEffect(() => {
@@ -135,7 +135,9 @@ const App: React.FC = () => {
           companhia: v.companhia === 'OUTROS' ? (v.manual_name || 'OUTROS') : v.companhia,
           numero: v.numero || 'S/N', inicio: v.pouso, fim: v.reboque
         })),
-        transporte_tripulacao: formTransporte,
+        transporte_tripulacao: formTransporte.map(t => ({
+          cia: t.cia === 'OUTROS' ? (t.manual_name || 'OUTROS') : t.cia
+        })),
         gse_enviados: formGseOut,
         gse_retornados: formGseIn,
         tem_equipamento_enviado: formGseOut.length > 0,
@@ -239,9 +241,9 @@ const App: React.FC = () => {
             handleRemoveGseIn={i => setFormGseIn(formGseIn.filter((_, idx) => idx !== i))}
             handleGseInChange={(i, v) => { const u = [...formGseIn]; u[i].prefixo = v; setFormGseIn(u); }}
             formTransporte={formTransporte}
-            handleAddTransporte={() => setFormTransporte([...formTransporte, { cia: '' }])}
+            handleAddTransporte={() => setFormTransporte([...formTransporte, { cia: '', manual_name: '' }])}
             handleRemoveTransporte={i => setFormTransporte(formTransporte.filter((_, idx) => idx !== i))}
-            handleTransporteChange={(i, v) => { const u = [...formTransporte]; u[i].cia = v; setFormTransporte(u); }}
+            handleTransporteChange={(i, f, v) => { const u = [...formTransporte]; (u[i] as any)[f] = v; setFormTransporte(u); }}
             fleetDetails={fleetDetails} 
             isSubmitting={isSubmitting} 
             handleSaveReport={handleSaveReport}
